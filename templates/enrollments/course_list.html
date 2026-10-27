@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>可選課程</h2>
+<form method="get" class="mb-3">
+    <select name="semester" onchange="this.form.submit()" class="form-select w-auto">
+        {% for s in semesters %}
+            <option value="{{ s.id }}" {% if semester and s.id == semester.id %}selected{% endif %}>{{ s.name }}{% if s.is_active %} (開放選課){% endif %}</option>
+        {% endfor %}
+    </select>
+</form>
+<table class="table table-striped">
+    <thead>
+        <tr><th>課程</th><th>學分</th><th>教師</th><th>時段</th><th>地點</th><th>名額</th><th>操作</th></tr>
+    </thead>
+    <tbody>
+    {% for section in sections %}
+        <tr>
+            <td>{{ section.course.code }} {{ section.course.name }}</td>
+            <td>{{ section.course.credits }}</td>
+            <td>{{ section.teacher.username|default:"-" }}</td>
+            <td>
+                {% for ts in section.timeslots.all %}
+                    {{ ts.get_weekday_display }} {{ ts.start_time }}-{{ ts.end_time }}<br>
+                {% endfor %}
+            </td>
+            <td>
+                {% for ts in section.timeslots.all %}
+                    {{ ts.location|default:"-" }}<br>
+                {% endfor %}
+            </td>
+            <td>{{ section.enrollments.count }}/{{ section.capacity }}</td>
+            <td>
+                {% if section.id in enrolled_section_ids %}
+                    <span class="text-success">已選</span>
+                {% else %}
+                    <form action="{% url 'enroll' section.id %}" method="post">
+                        {% csrf_token %}
+                        <button class="btn btn-primary btn-sm">加選</button>
+                    </form>
+                {% endif %}
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="7">目前無可選課程</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

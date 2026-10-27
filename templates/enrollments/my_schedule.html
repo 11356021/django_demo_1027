@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>我的課表</h2>
+<table class="table table-striped">
+    <thead>
+        <tr><th>課程</th><th>學分</th><th>教師</th><th>學期</th><th>時段</th><th>地點</th><th>操作</th></tr>
+    </thead>
+    <tbody>
+    {% for e in enrollments %}
+        <tr>
+            <td>{{ e.section.course.code }} {{ e.section.course.name }}</td>
+            <td>{{ e.section.course.credits }}</td>
+            <td>{{ e.section.teacher.username|default:"-" }}</td>
+            <td>{{ e.section.semester.name }}</td>
+            <td>
+                {% for ts in e.section.timeslots.all %}
+                    {{ ts.get_weekday_display }} {{ ts.start_time }}-{{ ts.end_time }}<br>
+                {% endfor %}
+            </td>
+            <td>
+                {% for ts in e.section.timeslots.all %}
+                    {{ ts.location|default:"-" }}<br>
+                {% endfor %}
+            </td>
+            <td>
+                <form action="{% url 'drop' e.id %}" method="post">
+                    {% csrf_token %}
+                    <button class="btn btn-danger btn-sm">退選</button>
+                </form>
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="7">尚未選課</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
