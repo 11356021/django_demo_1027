@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>加退選紀錄</h2>
+<p class="text-muted">目前修課中 {{ enrolled_count }} 門，已退選 {{ dropped_count }} 門。退選後不得重新加選同一門課。</p>
+<table class="table table-striped align-middle">
+    <thead>
+        <tr><th>學期</th><th>課程</th><th>學分</th><th>教師</th><th>狀態</th><th>加選時間</th><th>退選時間</th></tr>
+    </thead>
+    <tbody>
+    {% for e in enrollments %}
+        <tr>
+            <td>{{ e.section.semester.name }}</td>
+            <td>{{ e.section.course.code }} {{ e.section.course.name }}</td>
+            <td>{{ e.section.course.credits }}</td>
+            <td>{{ e.section.teacher.username|default:"-" }}</td>
+            <td>
+                {% if e.status == "ENROLLED" %}
+                    <span class="badge bg-success">修課中</span>
+                {% else %}
+                    <span class="badge bg-secondary">已退選</span>
+                {% endif %}
+            </td>
+            <td>{{ e.enrolled_at|date:"Y-m-d H:i" }}</td>
+            <td>
+                {% if e.dropped_at %}{{ e.dropped_at|date:"Y-m-d H:i" }}{% else %}-{% endif %}
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="7">尚無加退選紀錄</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

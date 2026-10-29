@@ -1,8 +1,7 @@
-from datetime import datetime
-
 from django.db.models import Sum
 from django.utils import timezone
 
+from accounts.services import get_credit_limit
 from courses.models import Section, TimeSlot
 from enrollments.models import Enrollment
 
@@ -27,8 +26,7 @@ def has_time_conflict(student, section):
 
 
 def would_exceed_credit_limit(student, section):
-    profile = getattr(student, "profile", None)
-    limit = profile.credit_limit if profile else 18
+    limit = get_credit_limit(student)
     current = Enrollment.objects.filter(student=student, status=Enrollment.Status.ENROLLED).aggregate(
         total=Sum("section__course__credits")
     )["total"] or 0
@@ -48,27 +46,32 @@ def is_enrollment_open(section):
 
 
 def enroll_student(student, section):
-    if Enrollment.objects.filter(student=student, section=section, status=Enrollment.Status.ENROLLED).exists():
-        return False, "Already enrolled."
+    existing = Enrollment.objects.filter(student=student, section=section).first()
+    if existing:
+        if existing.status == Enrollment.Status.ENROLLED:
+            return False, "您已加選此課程。"
+        return False, "您曾退選此課程，不得重新加選。"
     if not is_enrollment_open(section):
-        return False, "Enrollment not open for this semester."
+        return False, "目前非加選期間，無法加選。"
     if has_time_conflict(student, section):
-        return False, "Time conflict with existing enrolled course."
+        return False, "與已選課程時段衝堂。"
     if would_exceed_credit_limit(student, section):
-        return False, "Exceeds credit limit."
+        return False, "超過學分上限。"
     count_enrolled = Enrollment.objects.filter(section=section, status=Enrollment.Status.ENROLLED).count()
     if count_enrolled >= section.capacity:
-        return False, "Section is full."
+        return False, "課程名額已滿。"
     Enrollment.objects.create(student=student, section=section, status=Enrollment.Status.ENROLLED)
-    return True, "Enrolled successfully."
+    return True, "加選成功。"
 
 
 def drop_student(student, enrollment):
     if enrollment.student_id != student.id:
-        return False, "Not allowed."
+        return False, "不得退選他人的課程。"
     if enrollment.status != Enrollment.Status.ENROLLED:
-        return False, "Already dropped."
+        return False, "此課程已退選。"
+    if not is_enrollment_open(enrollment.section):
+        return False, "目前非加退選期間，無法退選。"
     enrollment.status = Enrollment.Status.DROPPED
     enrollment.dropped_at = timezone.now()
-    enrollment.save()
-    return True, "Dropped successfully."
+    enrollment.save(update_fields=["status", "dropped_at"])
+    return True, "退選成功。"

@@ -17,6 +17,7 @@ class Course(models.Model):
     name = models.CharField(max_length=100)
     credits = models.PositiveIntegerField()
     department = models.CharField(max_length=50, blank=True)
+    description = models.TextField(blank=True)
 
     class Meta:
         unique_together = ("code",)
@@ -48,6 +49,15 @@ class TimeSlot(models.Model):
         (6, "Saturday"),
         (7, "Sunday"),
     ]
+    WEEKDAY_LABELS = {
+        1: "週一",
+        2: "週二",
+        3: "週三",
+        4: "週四",
+        5: "週五",
+        6: "週六",
+        7: "週日",
+    }
 
     section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name="timeslots")
     weekday = models.IntegerField(choices=WEEKDAY_CHOICES)
@@ -55,5 +65,9 @@ class TimeSlot(models.Model):
     end_time = models.TimeField()
     location = models.CharField(max_length=50, blank=True)
 
+    @property
+    def weekday_label(self):
+        return self.WEEKDAY_LABELS.get(self.weekday, "")
+
     def __str__(self):
-        return f"{self.section} {self.get_weekday_display()} {self.start_time}-{self.end_time}"
+        return f"{self.section} {self.weekday_label} {self.start_time}-{self.end_time}"

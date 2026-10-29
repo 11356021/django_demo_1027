@@ -7,4 +7,5 @@ urlpatterns = [
     path("enroll/<int:section_id>/", views.enroll, name="enroll"),
     path("drop/<int:enrollment_id>/", views.drop, name="drop"),
     path("my-schedule/", views.my_schedule, name="my_schedule"),
+    path("history/", views.enrollment_history, name="enrollment_history"),
 ]

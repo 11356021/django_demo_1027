@@ -1,6 +1,72 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>我的課表</h2>
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+        <div class="card"><div class="card-body">
+            <div class="text-muted small">已選課程</div>
+            <div class="fs-4">{{ course_count }}</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card"><div class="card-body">
+            <div class="text-muted small">總學分</div>
+            <div class="fs-4">{{ total_credits }}</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card"><div class="card-body">
+            <div class="text-muted small">學分上限</div>
+            <div class="fs-4">{{ credit_limit }}</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card"><div class="card-body">
+            <div class="text-muted small">剩餘學分</div>
+            <div class="fs-4">{{ remaining_credits }}</div>
+        </div></div>
+    </div>
+</div>
+<h5 class="mt-4 mb-2">週課表</h5>
+{% if grid %}
+<div class="table-responsive">
+    <table class="table table-bordered align-middle text-center">
+        <thead class="table-light">
+            <tr>
+                <th style="width: 100px;">時間</th>
+                {% for weekday, label in weekdays %}
+                    <th>{{ label }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in grid %}
+            <tr>
+                <th class="small text-nowrap">
+                    {{ row.start_time|time:"H:i" }}<br>{{ row.end_time|time:"H:i" }}
+                </th>
+                {% for cell in row.cells %}
+                    <td style="min-width: 120px; height: 80px;">
+                        {% for entry in cell %}
+                            <div class="border rounded p-2 bg-primary-subtle h-100">
+                                <div class="fw-bold small">{{ entry.enrollment.section.course.code }}</div>
+                                <div class="small">{{ entry.enrollment.section.course.name }}</div>
+                                <div class="text-muted small">{{ entry.slot.location|default:"-" }}</div>
+                            </div>
+                        {% empty %}
+                            <span class="text-muted">·</span>
+                        {% endfor %}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="text-muted">尚未選課，加選後會在這裡顯示週課表。</p>
+{% endif %}
+<h5 class="mt-4 mb-2">課程明細</h5>
 <table class="table table-striped">
     <thead>
         <tr><th>課程</th><th>學分</th><th>教師</th><th>學期</th><th>時段</th><th>地點</th><th>操作</th></tr>
@@ -14,7 +80,7 @@
             <td>{{ e.section.semester.name }}</td>
             <td>
                 {% for ts in e.section.timeslots.all %}
-                    {{ ts.get_weekday_display }} {{ ts.start_time }}-{{ ts.end_time }}<br>
+                    {{ ts.weekday_label }} {{ ts.start_time }}-{{ ts.end_time }}<br>
                 {% endfor %}
             </td>
             <td>

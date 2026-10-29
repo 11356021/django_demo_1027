@@ -9,5 +9,6 @@ urlpatterns = [
     path('', lambda request: redirect('course_list')),
     path('admin/', admin.site.urls),
     path('', include('enrollments.urls')),
+    path('accounts/', include('accounts.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
 ]

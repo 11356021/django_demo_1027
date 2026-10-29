@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>個人資料</h2>
+<div class="row g-4">
+    <div class="col-md-6">
+        <table class="table">
+            <tr><th>帳號</th><td>{{ user.username }}</td></tr>
+            <tr><th>學號</th><td>{{ profile.student_id|default:"-" }}</td></tr>
+            <tr>
+                <th>角色</th>
+                <td>
+                    {% if profile.role == "ADMIN" %}管理員
+                    {% elif profile.role == "TEACHER" %}教師
+                    {% else %}學生{% endif %}
+                </td>
+            </tr>
+            <tr><th>學分上限</th><td>{{ profile.credit_limit }}</td></tr>
+            <tr><th>Email</th><td>{{ user.email|default:"-" }}</td></tr>
+        </table>
+        <p>
+            <a href="{% url 'my_schedule' %}">查看我的課表與學分</a> ·
+            <a href="{% url 'enrollment_history' %}">查看加退選紀錄</a> ·
+            <a href="{% url 'password_change' %}">修改密碼</a>
+        </p>
+    </div>
+    <div class="col-md-6">
+        <h5>更新資料</h5>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-primary">儲存</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
